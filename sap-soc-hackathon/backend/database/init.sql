@@ -1,0 +1,1 @@
+-- Master init script — runs all schema files to create the four HANA tables

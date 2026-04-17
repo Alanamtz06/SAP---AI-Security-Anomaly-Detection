@@ -1,0 +1,8 @@
+# Dependencies for the ML engine service
+hdbcli==2.21.28
+fastapi==0.111.1
+scikit-learn==1.5.1
+uvicorn==0.30.3
+pandas==2.2.2
+joblib==1.4.2
+python-dotenv==1.0.1

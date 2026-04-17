@@ -1,0 +1,4 @@
+# Dependencies for the alerting service worker
+hdbcli==2.21.28
+requests==2.32.3
+python-dotenv==1.0.1

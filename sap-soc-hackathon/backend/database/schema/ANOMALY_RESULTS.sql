@@ -1,0 +1,1 @@
+-- CREATE TABLE definition for ANOMALY_RESULTS: ML model outputs with anomaly scores per log

@@ -1,0 +1,1 @@
+-- CREATE TABLE definition for SAP_SYSTEM_LOGS: raw system and security log entries

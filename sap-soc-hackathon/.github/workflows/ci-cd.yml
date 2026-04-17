@@ -1,0 +1,1 @@
+# GitHub Actions workflow — builds all services and runs cf push on merge to main

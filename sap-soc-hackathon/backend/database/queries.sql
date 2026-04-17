@@ -1,0 +1,1 @@
+-- Reusable parameterized SELECT queries shared across backend services

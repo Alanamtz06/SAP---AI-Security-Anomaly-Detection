@@ -1,0 +1,1 @@
+-- CREATE TABLE definition for INCIDENTS: confirmed threats with severity and alert status

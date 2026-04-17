@@ -1,0 +1,1 @@
+-- CREATE TABLE definition for SAP_LLM_LOGS: LLM interaction logs with token and latency data
