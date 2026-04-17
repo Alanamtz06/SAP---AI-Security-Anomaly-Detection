@@ -7,7 +7,8 @@ HANA_LOCAL = {
     "port": 443,
     "user": "DBADMIN",
     "password": "Alana1234",
-    "encrypt": True
+    "encrypt": True,
+    "sslValidateCertificate": False
 }
 
 
@@ -21,7 +22,8 @@ def get_connection():
             port=int(creds["port"]),
             user=creds["user"],
             password=creds["password"],
-            encrypt=True
+            encrypt=True,
+            sslValidateCertificate=False
         )
     else:
         return dbapi.connect(
@@ -29,7 +31,8 @@ def get_connection():
             port=HANA_LOCAL["port"],
             user=HANA_LOCAL["user"],
             password=HANA_LOCAL["password"],
-            encrypt=HANA_LOCAL["encrypt"]
+            encrypt=HANA_LOCAL["encrypt"],
+            sslValidateCertificate=HANA_LOCAL["sslValidateCertificate"]
         )
 
 
