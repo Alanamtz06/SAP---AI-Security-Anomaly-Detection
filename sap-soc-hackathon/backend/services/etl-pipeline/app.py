@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from connection import test_connection
 from ingestion import run_ingestion
 
-POLL_INTERVAL = 1800  # 30 minutes
+POLL_INTERVAL = 300  # 5 minutes
 RETRY_DELAY   = 60    # 1 minute on error
 
 
@@ -32,19 +32,39 @@ def now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-test_connection()
-print("ETL Pipeline started. Polling every 30 minutes.")
-
-while True:
-    try:
-        print(f"\n[{now()}] Starting ingestion...")
-        result = run_ingestion()
-        print(
-            f"[{now()}] Done — "
-            f"total={result['total']} system={result['system_logs']} llm={result['llm_logs']}"
-        )
-        time.sleep(POLL_INTERVAL)
-    except Exception as e:
-        print(f"[{now()}] ERROR: {e}")
-        print(f"Retrying in {RETRY_DELAY} seconds...")
-        time.sleep(RETRY_DELAY)
+if __name__ == "__main__":
+    import sys
+    
+    test_connection()
+    
+    # Check if running in "daemon" mode (auto every 5 min)
+    # or "manual" mode (run once and exit)
+    if len(sys.argv) > 1 and sys.argv[1] == "--daemon":
+        print("ETL Pipeline started in DAEMON mode. Polling every 5 minutes.")
+        while True:
+            try:
+                print(f"\n[{now()}] Starting ingestion...")
+                result = run_ingestion()
+                print(
+                    f"[{now()}] Done — "
+                    f"total={result['total']} system={result['system_logs']} llm={result['llm_logs']}"
+                )
+                time.sleep(POLL_INTERVAL)
+            except Exception as e:
+                print(f"[{now()}] ERROR: {e}")
+                print(f"Retrying in {RETRY_DELAY} seconds...")
+                time.sleep(RETRY_DELAY)
+    else:
+        # Manual mode - run once and exit
+        print("ETL Pipeline running in MANUAL mode (one-time execution).")
+        try:
+            print(f"\n[{now()}] Starting ingestion...")
+            result = run_ingestion()
+            print(
+                f"[{now()}] Done — "
+                f"total={result['total']} system={result['system_logs']} llm={result['llm_logs']}"
+            )
+            print("\nIngestion complete. Pipeline will exit.")
+        except Exception as e:
+            print(f"[{now()}] ERROR: {e}")
+            sys.exit(1)
