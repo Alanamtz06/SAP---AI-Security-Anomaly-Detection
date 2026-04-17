@@ -1,1 +1,35 @@
-# MTA descriptor — orchestrates all four CF services and the HANA binding together
+_schema-version: "3.1"
+ID: sap-soc-platform
+version: 1.0.0
+description: SAP SOC Hackathon - AI Security Anomaly Detection Platform
+
+modules:
+  - name: api-gateway
+    type: python
+    path: backend/services/api-gateway
+    parameters:
+      memory: 256M
+
+  - name: etl-pipeline
+    type: python
+    path: backend/services/etl-pipeline
+    parameters:
+      memory: 256M
+
+  - name: ml-engine
+    type: python
+    path: backend/services/ml-engine
+    parameters:
+      memory: 512M
+
+  - name: alerting-service
+    type: python
+    path: backend/services/alerting-service
+    parameters:
+      memory: 256M
+
+  - name: frontend
+    type: nodejs
+    path: frontend
+    parameters:
+      memory: 128M
