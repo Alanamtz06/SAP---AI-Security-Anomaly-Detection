@@ -1,2 +1,4 @@
 hdbcli
 requests
+pandas
+python-dotenv

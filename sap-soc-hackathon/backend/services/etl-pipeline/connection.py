@@ -2,11 +2,17 @@ import os
 import json
 from hdbcli import dbapi
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv opcional; en Cloud Foundry no hace falta
+
 HANA_LOCAL = {
     "host": "bdad283d-c94e-46fb-8167-78fba6c2018a.hna1.prod-us10.hanacloud.ondemand.com",
     "port": 443,
     "user": "DBADMIN",
-    "password": "Alana1234",
+    "password": os.environ.get("HANA_PASS", ""),  # definida en .env, no hardcodeada
     "encrypt": True,
     "sslValidateCertificate": False
 }
