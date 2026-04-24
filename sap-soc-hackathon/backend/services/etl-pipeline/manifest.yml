@@ -4,7 +4,6 @@ applications:
     instances: 1
     buildpacks:
       - python_buildpack
-    # Run in DAEMON mode - ingests data every 5 minutes automatically
     command: python app.py --daemon
     no-route: true
     health-check-type: process
