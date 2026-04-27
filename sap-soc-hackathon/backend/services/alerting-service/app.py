@@ -1,8 +1,46 @@
-# Worker — polls ANOMALY_RESULTS in HANA and fires webhooks for confirmed threats
-import sys
+# HOW TO TEST LOCALLY:
+# 1. pip install -r requirements.txt
+# 2. Create .env with HANA_PASS and SAP_API_KEY
+# 3. python app.py
+
+import logging
 import os
+import signal
+import sys
+from types import FrameType
+from typing import Optional
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../database'))
-from connection import get_connection, execute_query, execute_insert, test_connection
+from dotenv import load_dotenv
+load_dotenv()
 
-test_connection()
+from alerter import AlertingService
+
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO"),
+    format="[%(asctime)s] %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    stream=sys.stdout,
+)
+log = logging.getLogger("soc.alerting")
+
+
+def _main() -> None:
+    if not os.environ.get("SAP_API_KEY"):
+        log.error("SAP_API_KEY not set — aborting")
+        sys.exit(1)
+
+    service = AlertingService()
+
+    def _sigterm(_signum: int, _frame: Optional[FrameType]) -> None:
+        log.info("SIGTERM received — shutting down")
+        service.stop()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, _sigterm)
+
+    log.info("SOC Alerting Service starting...")
+    service.run()
+
+
+if __name__ == "__main__":
+    _main()

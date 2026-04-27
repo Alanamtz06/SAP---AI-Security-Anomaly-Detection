@@ -1,1 +1,25 @@
-# CF manifest for the alerting service — background worker, no route
+---
+applications:
+  - name: soc-alerting-service
+    memory: 512M
+    disk_quota: 1G
+    instances: 1
+    buildpacks:
+      - python_buildpack
+
+    # Worker app — no HTTP route
+    no-route: true
+    health-check-type: none
+
+    # HANA Cloud service binding
+    services:
+      - DB_Hack
+
+    env:
+      PYTHONUNBUFFERED: "1"
+      LOG_LEVEL: "INFO"
+      # SAP_API_KEY must be set via: cf set-env soc-alerting-service SAP_API_KEY <token>
+      # HANA_PASS is injected automatically via VCAP_SERVICES when DB_Hack is bound.
+
+    command: python app.py
+    timeout: 180
