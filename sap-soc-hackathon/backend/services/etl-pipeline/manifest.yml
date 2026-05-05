@@ -1,5 +1,8 @@
 applications:
   - name: soc-etl-pipeline
+    buildpacks:
+      - python_buildpack
+    path: .
     memory: 512M
     instances: 1
     timeout: 600
@@ -7,7 +10,9 @@ applications:
     no-route: true
     health-check-type: process
     env:
-      POLL_INTERVAL_SECONDS: 120
+      POLL_INTERVAL_SECONDS: "120"
       ML_ENGINE_URL: https://ml-engine.cfapps.us10.hana.ondemand.com
-    services:
-      - DB_Hack
+      HANA_HOST: bdad283d-c94e-46fb-8167-78fba6c2018a.hna1.prod-us10.hanacloud.ondemand.com
+      HANA_PORT: "443"
+      HANA_USER: DBADMIN
+      # HANA_PASS: set via -> cf set-env soc-etl-pipeline HANA_PASS "your-password"

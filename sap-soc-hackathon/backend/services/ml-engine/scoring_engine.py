@@ -1,4 +1,5 @@
 import os
+import threading
 import pandas as pd
 import numpy as np
 import joblib
@@ -12,43 +13,66 @@ from llm_features import extract_llm_features
 
 load_dotenv()
 
+MODEL_NAMES = ['IF_SYSTEM_PEAK', 'IF_SYSTEM_OFFPEAK', 'IF_LLM_PEAK', 'IF_LLM_OFFPEAK']
+
+
 class ScoringEngine:
     def __init__(self):
         self.artifact_dir = Path(__file__).parent / 'artifacts'
-        self.models = self._load_models()
+        self.models = {}
+        self._ready = False
+        self._training = False
+        self._init()
+
+    def _init(self):
+        missing = [n for n in MODEL_NAMES if not (self.artifact_dir / f'{n}.joblib').exists()]
+        if missing:
+            print(f"Models not found: {missing}. Starting background training...")
+            self._training = True
+            t = threading.Thread(target=self._train_and_load, daemon=True)
+            t.start()
+        else:
+            self._load_models()
+
+    def _train_and_load(self):
+        try:
+            from model.train import train_models
+            train_models()
+            self._load_models()
+            print("✓ Background training complete — models ready")
+        except Exception as e:
+            print(f"Training failed: {e}")
+        finally:
+            self._training = False
 
     def _load_models(self):
-        """Load the 4 Isolation Forest models from artifacts/"""
-        models = {}
-        model_names = [
-            'IF_SYSTEM_PEAK', 'IF_SYSTEM_OFFPEAK',
-            'IF_LLM_PEAK', 'IF_LLM_OFFPEAK'
-        ]
-        for name in model_names:
+        for name in MODEL_NAMES:
             path = self.artifact_dir / f'{name}.joblib'
             if path.exists():
-                models[name] = joblib.load(path)
+                self.models[name] = joblib.load(path)
                 print(f"✓ Loaded {name}")
             else:
-                print(f"⚠ {name} not found")
-        return models
+                print(f"⚠ {name} not found at {path}")
+        if len(self.models) == len(MODEL_NAMES):
+            self._ready = True
+
+    def is_ready(self) -> bool:
+        return self._ready
+
+    def training_status(self) -> str:
+        if self._ready:
+            return "ready"
+        if self._training:
+            return "training"
+        return "error"
 
     def _get_model_name(self, source_table, hour):
-        """Select model based on log source and hour of day"""
         is_peak = 8 <= hour <= 18
-
         if source_table == 'SYSTEM':
             return 'IF_SYSTEM_PEAK' if is_peak else 'IF_SYSTEM_OFFPEAK'
-        else:  # LLM
-            return 'IF_LLM_PEAK' if is_peak else 'IF_LLM_OFFPEAK'
+        return 'IF_LLM_PEAK' if is_peak else 'IF_LLM_OFFPEAK'
 
     def score_batch(self, source_table, df):
-        """
-        Score a batch of logs.
-        source_table: 'SYSTEM' or 'LLM'
-        df: DataFrame with log records
-        Returns: DataFrame with anomaly scores
-        """
         if df.empty:
             return pd.DataFrame()
 
@@ -68,7 +92,6 @@ class ScoringEngine:
         scores_raw = model.score_samples(features)
         predictions = model.predict(features)
 
-        # Normalize to [0, 1] where 1 = most anomalous (sklearn: -1=outlier, +1=inlier)
         scores_norm = 1 / (1 + np.exp(-scores_raw))
 
         result_df = df[['ID', 'TIMESTAMP']].copy()
@@ -83,22 +106,17 @@ class ScoringEngine:
         return result_df
 
     def insert_results(self, results_df):
-        """Insert scored results into ANOMALY_RESULTS"""
         if results_df.empty:
             return 0
 
-        rows = []
-        for _, row in results_df.iterrows():
-            rows.append((
-                row['SOURCE_TABLE'],
-                row['SOURCE_ID'],
-                row['IS_ANOMALY'],
-                row['ANOMALY_SCORE'],
-                row['ANOMALY_TYPE'],
-                None,  # CLUSTER_ID
-                row['ML_MODEL_VER'],
-                row['DETECTED_AT']
-            ))
+        rows = [
+            (
+                row['SOURCE_TABLE'], row['SOURCE_ID'], row['IS_ANOMALY'],
+                row['ANOMALY_SCORE'], row['ANOMALY_TYPE'], None,
+                row['ML_MODEL_VER'], row['DETECTED_AT']
+            )
+            for _, row in results_df.iterrows()
+        ]
 
         sql = """
         INSERT INTO ANOMALY_RESULTS

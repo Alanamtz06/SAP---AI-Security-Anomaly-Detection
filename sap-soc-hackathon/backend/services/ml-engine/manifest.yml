@@ -1,10 +1,18 @@
 applications:
   - name: ml-engine
+    buildpacks:
+      - python_buildpack
+    path: .
     memory: 512M
+    disk_quota: 1G
     instances: 1
     timeout: 300
     command: uvicorn app:app --host 0.0.0.0 --port $PORT
+    health-check-type: http
+    health-check-http-endpoint: /health
     env:
-      POLL_INTERVAL_SECONDS: 120
-    services:
-      - DB_Hack
+      POLL_INTERVAL_SECONDS: "120"
+      HANA_HOST: bdad283d-c94e-46fb-8167-78fba6c2018a.hna1.prod-us10.hanacloud.ondemand.com
+      HANA_PORT: "443"
+      HANA_USER: DBADMIN
+      # HANA_PASS: set via -> cf set-env ml-engine HANA_PASS "your-password"

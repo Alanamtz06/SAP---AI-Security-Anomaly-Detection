@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import logging
 import requests
@@ -8,8 +7,6 @@ from dotenv import load_dotenv
 
 from connection import test_connection, execute_insert
 from ingestion import run_ingestion
-
-sys.path.insert(0, os.path.abspath('../../services/alerting-service'))
 
 load_dotenv()
 
@@ -32,7 +29,7 @@ def record_cycle(cycle_start, cycle_end, records_processed, anomalies_detected, 
         VALUES (?, ?, ?, ?, ?, ?, ?)
         """
         execute_insert(sql, [(cycle_start, cycle_end, records_processed, anomalies_detected, status, error, POLL_INTERVAL)])
-        logger.info(f"✓ Cycle recorded in PIPELINE_HEALTH")
+        logger.info("✓ Cycle recorded in PIPELINE_HEALTH")
     except Exception as e:
         logger.error(f"Could not record cycle: {e}")
 
@@ -53,20 +50,6 @@ def call_ml_engine():
             return 0
     except Exception as e:
         logger.warning(f"⚠ ML Engine call failed: {e}")
-        return 0
-
-def call_alerting_service():
-    """Llama a alerting-service para procesar alertas"""
-    try:
-        logger.info("Triggering alerting-service...")
-        # Importar dinámicamente para evitar circular imports
-        from importlib import import_module
-        alerting_app = import_module('app')
-        alert_result = alerting_app.process_alerts()
-        logger.info(f"✓ Alerting Service: {alert_result.get('anomalies_processed', 0)} processed, {alert_result.get('alerts_sent', 0)} alerts sent")
-        return alert_result.get('alerts_sent', 0)
-    except Exception as e:
-        logger.warning(f"⚠ Alerting service failed: {e}")
         return 0
 
 def polling_loop():
@@ -92,10 +75,7 @@ def polling_loop():
             # 2. Llamar ml-engine
             anomalies_detected = call_ml_engine()
 
-            # 3. Llamar alerting-service
-            alerts_sent = call_alerting_service()
-
-            # 4. Registrar ciclo
+            # 3. Registrar ciclo
             cycle_end = datetime.now(timezone.utc)
             record_cycle(cycle_start, cycle_end, total_records, anomalies_detected, status='SUCCESS')
 
@@ -110,9 +90,9 @@ def polling_loop():
         time.sleep(POLL_INTERVAL)
 
 if __name__ == "__main__":
+    import sys
     test_connection()
 
-    import sys
     if len(sys.argv) > 1 and sys.argv[1] == "--daemon":
         logger.info("Starting in DAEMON mode")
         polling_loop()
@@ -121,8 +101,7 @@ if __name__ == "__main__":
         try:
             result = run_ingestion()
             anomalies = call_ml_engine()
-            alerts = call_alerting_service()
-            logger.info(f"Done - {result['total']} records, {anomalies} anomalies, {alerts} alerts sent")
+            logger.info(f"Done - {result['total']} records, {anomalies} anomalies detected")
         except Exception as e:
             logger.error(f"ERROR: {e}")
             sys.exit(1)

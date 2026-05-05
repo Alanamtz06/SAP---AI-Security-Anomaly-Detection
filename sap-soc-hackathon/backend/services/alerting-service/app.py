@@ -39,7 +39,8 @@ def get_new_anomalies():
     AND NOT EXISTS (
         SELECT 1 FROM INCIDENTS I WHERE I.ANOMALY_ID = AR.ID
     )
-    LIMIT 100
+    ORDER BY AR.ANOMALY_SCORE DESC
+    LIMIT 1
     """
     try:
         return execute_query(query)
