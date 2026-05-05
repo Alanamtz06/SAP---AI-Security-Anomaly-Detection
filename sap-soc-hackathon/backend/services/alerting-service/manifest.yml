@@ -1,1 +1,11 @@
-# CF manifest for the alerting service — background worker, no route
+applications:
+  - name: alerting-service
+    memory: 256M
+    instances: 1
+    timeout: 300
+    no-route: true
+    health-check-type: process
+    env:
+      SAP_API_KEY: ${SAP_API_KEY}
+    services:
+      - DB_Hack
