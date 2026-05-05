@@ -1,1 +1,10 @@
-# CF manifest for the ML engine — deployed as a web app with a public route
+applications:
+  - name: ml-engine
+    path: .
+    memory: 512M
+    instances: 1
+    timeout: 300
+    env:
+      POLL_INTERVAL_SECONDS: 120
+    services:
+      - DB_Hack
