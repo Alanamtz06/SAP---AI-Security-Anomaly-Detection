@@ -10,7 +10,7 @@ applications:
     no-route: true
     health-check-type: process
     env:
-      POLL_INTERVAL_SECONDS: "120"
+      POLL_INTERVAL_SECONDS: "1800"
       ML_ENGINE_URL: https://ml-engine.cfapps.us10.hana.ondemand.com
       HANA_HOST: bdad283d-c94e-46fb-8167-78fba6c2018a.hna1.prod-us10.hanacloud.ondemand.com
       HANA_PORT: "443"
