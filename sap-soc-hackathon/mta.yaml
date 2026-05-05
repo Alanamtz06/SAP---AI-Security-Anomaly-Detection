@@ -4,32 +4,62 @@ version: 1.0.0
 description: SAP SOC Hackathon - AI Security Anomaly Detection Platform
 
 modules:
-  - name: api-gateway
-    type: python
-    path: backend/services/api-gateway
-    parameters:
-      memory: 256M
-
-  - name: etl-pipeline
-    type: python
-    path: backend/services/etl-pipeline
-    parameters:
-      memory: 256M
-
   - name: ml-engine
     type: python
     path: backend/services/ml-engine
     parameters:
       memory: 512M
+      instances: 1
+      timeout: 300
+      command: uvicorn app:app --host 0.0.0.0 --port $PORT
+    properties:
+      POLL_INTERVAL_SECONDS: 120
+    requires:
+      - name: DB_Hack
+
+  - name: soc-etl-pipeline
+    type: python
+    path: backend/services/etl-pipeline
+    parameters:
+      memory: 512M
+      instances: 1
+      timeout: 600
+      command: python app.py --daemon
+      no-route: true
+      health-check-type: process
+    properties:
+      POLL_INTERVAL_SECONDS: 120
+      ML_ENGINE_URL: ~{ml-engine/url}
+    requires:
+      - name: DB_Hack
+      - name: ml-engine
+        properties:
+          ML_ENGINE_URL: ~{url}
 
   - name: alerting-service
     type: python
     path: backend/services/alerting-service
     parameters:
       memory: 256M
+      instances: 1
+      timeout: 300
+      command: python app.py --daemon
+      no-route: true
+      health-check-type: process
+    properties:
+      ALERT_INTERVAL_SECONDS: 60
+    requires:
+      - name: DB_Hack
 
-  - name: frontend
-    type: nodejs
-    path: frontend
+  - name: api-gateway
+    type: python
+    path: backend/services/api-gateway
     parameters:
-      memory: 128M
+      memory: 256M
+      instances: 1
+    requires:
+      - name: DB_Hack
+
+resources:
+  - name: DB_Hack
+    type: org.cloudfoundry.existing-service

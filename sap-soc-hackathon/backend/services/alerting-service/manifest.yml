@@ -3,9 +3,10 @@ applications:
     memory: 256M
     instances: 1
     timeout: 300
+    command: python app.py --daemon
     no-route: true
     health-check-type: process
     env:
-      SAP_API_KEY: ${SAP_API_KEY}
+      ALERT_INTERVAL_SECONDS: 60
     services:
       - DB_Hack

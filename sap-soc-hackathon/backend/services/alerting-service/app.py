@@ -1,26 +1,24 @@
 import os
 import sys
+import time
 import logging
-from datetime import datetime, timezone
 from dotenv import load_dotenv
 
-sys.path.insert(0, os.path.abspath('../../src'))
-sys.path.insert(0, os.path.abspath('../../services/etl-pipeline'))
-
-from db.connection import execute_query, get_connection, test_connection
+from connection import execute_query, get_connection, test_connection
 from webhook import send_alert_to_sap
 
 load_dotenv()
 
-# Logger
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
+ALERT_INTERVAL = int(os.environ.get('ALERT_INTERVAL_SECONDS', 60))
+
+
 def get_severity(anomaly_score: float) -> str:
-    """Mapea anomaly_score a severidad"""
     if anomaly_score >= 0.8:
         return 'CRITICAL'
     elif anomaly_score >= 0.6:
@@ -30,8 +28,9 @@ def get_severity(anomaly_score: float) -> str:
     else:
         return 'LOW'
 
+
 def get_new_anomalies():
-    """Obtiene anomalías sin incident creado (IS_ANOMALY=TRUE)"""
+    """Fetch anomalies flagged as IS_ANOMALY=TRUE that have no incident yet."""
     query = """
     SELECT AR.ID, AR.SOURCE_TABLE, AR.SOURCE_ID, AR.ANOMALY_SCORE,
            AR.ANOMALY_TYPE, AR.DETECTED_AT
@@ -48,8 +47,9 @@ def get_new_anomalies():
         logger.error(f"Error fetching anomalies: {e}")
         return []
 
+
 def create_incident(anomaly_id: int, severity: str, anomaly_type: str = None) -> int:
-    """Crea incident en INCIDENTS table. Retorna incident_id."""
+    """Create a record in INCIDENTS and return the new incident_id."""
     sql = """
     INSERT INTO INCIDENTS
     (ANOMALY_ID, SEVERITY, ATTACK_TYPE, WEBHOOK_STATUS, ALERT_SENT)
@@ -64,21 +64,21 @@ def create_incident(anomaly_id: int, severity: str, anomaly_type: str = None) ->
         finally:
             conn.close()
 
-        # Obtener el ID creado
         result = execute_query(
             f"SELECT ID FROM INCIDENTS WHERE ANOMALY_ID = {anomaly_id} ORDER BY CREATED_AT DESC LIMIT 1"
         )
         if result:
             incident_id = result[0]['ID']
-            logger.info(f"✓ Created incident {incident_id} for anomaly {anomaly_id}")
+            logger.info(f"Created incident {incident_id} for anomaly {anomaly_id}")
             return incident_id
         return None
     except Exception as e:
         logger.error(f"Error creating incident for anomaly {anomaly_id}: {e}")
         return None
 
+
 def update_incident_webhook_status(incident_id: int, status: str):
-    """Actualiza WEBHOOK_STATUS e ALERT_SENT en INCIDENTS"""
+    """Update WEBHOOK_STATUS and ALERT_SENT on an incident record."""
     sql = """
     UPDATE INCIDENTS
     SET WEBHOOK_STATUS = ?, ALERT_SENT = ?
@@ -92,17 +92,17 @@ def update_incident_webhook_status(incident_id: int, status: str):
             conn.commit()
         finally:
             conn.close()
-        logger.info(f"✓ Updated incident {incident_id} webhook_status to {status}")
+        logger.info(f"Incident {incident_id} webhook_status updated to {status}")
     except Exception as e:
         logger.error(f"Error updating incident {incident_id}: {e}")
 
-def process_alerts():
-    """Procesa anomalías nuevas: crea incidents y envía webhooks"""
-    logger.info("="*60)
-    logger.info("Starting alert processing cycle")
-    logger.info("="*60)
 
-    # 1. Obtener anomalías nuevas
+def process_alerts():
+    """Process new anomalies: create incidents and dispatch webhooks."""
+    logger.info("=" * 60)
+    logger.info("Starting alert processing cycle")
+    logger.info("=" * 60)
+
     anomalies = get_new_anomalies()
 
     if not anomalies:
@@ -114,21 +114,18 @@ def process_alerts():
     alerts_sent = 0
     alerts_failed = 0
 
-    # 2. Procesar cada anomalía
     for anomaly in anomalies:
         try:
             anomaly_id = anomaly['ID']
             severity = get_severity(anomaly['ANOMALY_SCORE'])
 
-            logger.info(f"\nProcessing anomaly {anomaly_id} (score: {anomaly['ANOMALY_SCORE']:.3f}, severity: {severity})")
+            logger.info(f"Processing anomaly {anomaly_id} (score: {anomaly['ANOMALY_SCORE']:.3f}, severity: {severity})")
 
-            # 2a. Crear incident
             incident_id = create_incident(anomaly_id, severity, anomaly['ANOMALY_TYPE'])
             if not incident_id:
                 logger.warning(f"Failed to create incident for anomaly {anomaly_id}")
                 continue
 
-            # 2b. Enviar webhook
             webhook_success = send_alert_to_sap(
                 anomaly_id=anomaly_id,
                 anomaly_score=anomaly['ANOMALY_SCORE'],
@@ -138,7 +135,6 @@ def process_alerts():
                 anomaly_type=anomaly['ANOMALY_TYPE'] or 'Unknown'
             )
 
-            # 2c. Actualizar webhook_status
             webhook_status = 'SUCCESS' if webhook_success else 'FAILED'
             update_incident_webhook_status(incident_id, webhook_status)
 
@@ -151,9 +147,9 @@ def process_alerts():
             logger.error(f"Error processing anomaly {anomaly['ID']}: {e}")
             alerts_failed += 1
 
-    logger.info("\n" + "="*60)
+    logger.info("=" * 60)
     logger.info(f"Alert cycle complete: {alerts_sent} sent, {alerts_failed} failed")
-    logger.info("="*60 + "\n")
+    logger.info("=" * 60)
 
     return {
         "status": "success",
@@ -162,8 +158,23 @@ def process_alerts():
         "alerts_failed": alerts_failed
     }
 
+
+def alerting_loop():
+    """Continuous polling loop — checks for new anomalies every ALERT_INTERVAL seconds."""
+    logger.info(f"Alerting Service started in daemon mode — polling every {ALERT_INTERVAL}s")
+    while True:
+        try:
+            process_alerts()
+        except Exception as e:
+            logger.error(f"Unhandled error in alert cycle: {e}")
+        time.sleep(ALERT_INTERVAL)
+
+
 if __name__ == '__main__':
-    logger.info("Alerting Service initialized")
     test_connection()
-    result = process_alerts()
-    logger.info(f"Result: {result}")
+    if len(sys.argv) > 1 and sys.argv[1] == '--daemon':
+        logger.info("Starting in DAEMON mode")
+        alerting_loop()
+    else:
+        result = process_alerts()
+        logger.info(f"Result: {result}")

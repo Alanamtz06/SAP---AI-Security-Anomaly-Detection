@@ -3,3 +3,4 @@
 __pycache__/
 *.pyc
 artifacts/*.joblib
+!services/ml-engine/artifacts/*.joblib

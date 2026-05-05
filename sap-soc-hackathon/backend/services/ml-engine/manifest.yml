@@ -1,9 +1,9 @@
 applications:
   - name: ml-engine
-    path: .
     memory: 512M
     instances: 1
     timeout: 300
+    command: uvicorn app:app --host 0.0.0.0 --port $PORT
     env:
       POLL_INTERVAL_SECONDS: 120
     services:
