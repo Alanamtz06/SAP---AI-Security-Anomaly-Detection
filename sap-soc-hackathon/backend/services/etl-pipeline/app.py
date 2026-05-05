@@ -34,20 +34,34 @@ def record_cycle(cycle_start, cycle_end, records_processed, anomalies_detected, 
         logger.error(f"Could not record cycle: {e}")
 
 def call_ml_engine():
-    """Llama a ml-engine para procesar logs nuevos"""
+    """Llama a ml-engine para scorear system logs y LLM logs nuevos"""
     try:
-        logger.info("Calling ml-engine...")
-        response = requests.post(
-            f"{ML_ENGINE_URL}/score",
-            timeout=30
-        )
+        ready = requests.get(f"{ML_ENGINE_URL}/ready", timeout=10)
+        if ready.status_code == 503:
+            status = ready.json().get('status', 'unknown')
+            logger.info(f"ML Engine not ready yet (status: {status}) — skipping scoring this cycle")
+            return 0
+
+        anomalies = 0
+
+        response = requests.post(f"{ML_ENGINE_URL}/score", timeout=30)
         if response.status_code == 200:
             result = response.json()
-            logger.info(f"✓ ML Engine: {result.get('records_processed')} processed, {result.get('anomalies_detected')} anomalies")
-            return result.get('anomalies_detected', 0)
+            logger.info(f"✓ ML Engine [SYSTEM]: {result.get('records_processed')} processed, {result.get('anomalies_detected')} anomalies")
+            anomalies += result.get('anomalies_detected', 0)
         else:
-            logger.warning(f"⚠ ML Engine error: {response.status_code}")
-            return 0
+            logger.warning(f"⚠ ML Engine [SYSTEM] error: {response.status_code}")
+
+        response_llm = requests.post(f"{ML_ENGINE_URL}/score-llm", timeout=30)
+        if response_llm.status_code == 200:
+            result_llm = response_llm.json()
+            logger.info(f"✓ ML Engine [LLM]: {result_llm.get('records_processed')} processed, {result_llm.get('anomalies_detected')} anomalies")
+            anomalies += result_llm.get('anomalies_detected', 0)
+        else:
+            logger.warning(f"⚠ ML Engine [LLM] error: {response_llm.status_code}")
+
+        return anomalies
+
     except Exception as e:
         logger.warning(f"⚠ ML Engine call failed: {e}")
         return 0
