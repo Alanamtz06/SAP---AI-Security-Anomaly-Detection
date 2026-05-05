@@ -1,12 +1,9 @@
-import os
-import sys
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import pandas as pd
 
-sys.path.insert(0, os.path.abspath('../../src'))
-from db.connection import execute_query
+from connection import execute_query
 from scoring_engine import ScoringEngine
 
 load_dotenv()
