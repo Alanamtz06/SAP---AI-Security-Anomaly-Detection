@@ -1,0 +1,6 @@
+.env
+.env.local
+__pycache__/
+*.pyc
+artifacts/*.joblib
+!services/ml-engine/artifacts/*.joblib

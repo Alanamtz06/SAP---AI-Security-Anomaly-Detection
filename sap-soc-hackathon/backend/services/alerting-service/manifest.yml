@@ -1,1 +1,18 @@
-# CF manifest for the alerting service — background worker, no route
+applications:
+  - name: alerting-service
+    buildpacks:
+      - python_buildpack
+    path: .
+    memory: 256M
+    instances: 1
+    timeout: 300
+    command: python app.py --daemon
+    no-route: true
+    health-check-type: process
+    env:
+      ALERT_INTERVAL_SECONDS: "60"
+      HANA_HOST: bdad283d-c94e-46fb-8167-78fba6c2018a.hna1.prod-us10.hanacloud.ondemand.com
+      HANA_PORT: "443"
+      HANA_USER: DBADMIN
+      # HANA_PASS: set via -> cf set-env alerting-service HANA_PASS "your-password"
+      # SAP_API_KEY: set via -> cf set-env alerting-service SAP_API_KEY "your-key"

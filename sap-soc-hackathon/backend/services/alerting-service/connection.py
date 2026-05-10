@@ -27,28 +27,14 @@ def get_connection():
     )
 
 
-def get_cursor():
+def execute_query(sql: str, params=None) -> list[dict]:
     conn = get_connection()
-    return conn, conn.cursor()
-
-
-def execute_query(sql: str, params: list = None) -> list:
-    conn, cursor = get_cursor()
-    cursor.execute(sql, params or [])
-    columns = [col[0] for col in cursor.description]
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(zip(columns, row)) for row in rows]
-
-
-def execute_insert(sql: str, rows: list):
-    conn, cursor = get_cursor()
     try:
-        cursor.executemany(sql, rows)
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise e
+        cursor = conn.cursor()
+        cursor.execute(sql, params or [])
+        columns: list[str] = [col[0] for col in cursor.description]
+        rows = cursor.fetchall()
+        return [dict(zip(columns, row)) for row in rows]
     finally:
         conn.close()
 
@@ -58,7 +44,9 @@ def test_connection():
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT 1 FROM DUMMY")
-        print("HANA connection OK")
         conn.close()
+        print("HANA connection OK")
+        return True
     except Exception as e:
         print(f"HANA connection FAILED: {e}")
+        return False
