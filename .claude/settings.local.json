@@ -6,7 +6,8 @@
       "Bash(python -m py_compile backend/services/alerting-service/app.py)",
       "Bash(python -m py_compile backend/services/alerting-service/webhook.py)",
       "Bash(python -m py_compile backend/services/ml-engine/model/predict.py)",
-      "Bash(python -m py_compile backend/services/api-gateway/app.py)"
+      "Bash(python -m py_compile backend/services/api-gateway/app.py)",
+      "Bash(cf apps *)"
     ]
   }
 }
