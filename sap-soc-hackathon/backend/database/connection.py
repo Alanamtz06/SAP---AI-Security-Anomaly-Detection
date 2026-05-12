@@ -1,12 +1,15 @@
 import os
 import json
 from hdbcli import dbapi
+from dotenv import load_dotenv
+
+load_dotenv()
 
 HANA_LOCAL = {
-    "host": "bdad283d-c94e-46fb-8167-78fba6c2018a.hna1.prod-us10.hanacloud.ondemand.com",
-    "port": 443,
-    "user": "DBADMIN",
-    "password": "Alana1234",
+    "host": os.environ.get("HANA_HOST", "bdad283d-c94e-46fb-8167-78fba6c2018a.hna1.prod-us10.hanacloud.ondemand.com"),
+    "port": int(os.environ.get("HANA_PORT", "443")),
+    "user": os.environ.get("HANA_USER", "DBADMIN"),
+    "password": os.environ.get("HANA_PASS", ""),
     "encrypt": True,
     "sslValidateCertificate": False
 }

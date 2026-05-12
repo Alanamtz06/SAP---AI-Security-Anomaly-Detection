@@ -60,6 +60,25 @@ modules:
     requires:
       - name: DB_Hack
 
+  - name: soc-frontend
+    type: staticfile
+    path: frontend
+    parameters:
+      memory: 256M
+      disk-quota: 512M
+    build-parameters:
+      builder: custom
+      commands:
+        - npm install
+        - npm run build
+      build-result: dist
+    properties:
+      BACKEND_URL: ~{api-gateway/url}
+    requires:
+      - name: api-gateway
+        properties:
+          url: ~{api-gateway/url}
+
 resources:
   - name: DB_Hack
     type: org.cloudfoundry.existing-service
