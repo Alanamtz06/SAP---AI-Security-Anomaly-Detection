@@ -22,7 +22,7 @@ export default function Dashboard({ stats, anomalies, incidents, logs, loading }
           <AnomalyChart anomalies={anomalies} />
         </div>
         <div className="col-span-2">
-          <LLMMetrics logs={logs} />
+          <LLMMetrics logs={logs} stats={stats} />
         </div>
       </div>
 

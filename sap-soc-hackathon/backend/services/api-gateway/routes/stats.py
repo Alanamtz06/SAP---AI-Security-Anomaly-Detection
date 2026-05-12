@@ -41,6 +41,25 @@ def get_stats():
         """)[0]["MTTD"]
         mttd_seconds = float(mttd_row) if mttd_row is not None else None
 
+        llm_success_count = execute_query(
+            "SELECT COUNT(*) AS CNT FROM SAP_LLM_LOGS WHERE UPPER(LLM_STATUS) = 'SUCCESS'"
+        )[0]["CNT"] or 0
+
+        llm_error_count = execute_query(
+            "SELECT COUNT(*) AS CNT FROM SAP_LLM_LOGS WHERE UPPER(LLM_STATUS) = 'ERROR'"
+        )[0]["CNT"] or 0
+
+        llm_timeout_count = execute_query(
+            "SELECT COUNT(*) AS CNT FROM SAP_LLM_LOGS WHERE UPPER(LLM_STATUS) = 'TIMEOUT'"
+        )[0]["CNT"] or 0
+
+        llm_total = int(llm_count)
+        llm_error_rate = None
+        if llm_total > 0:
+            llm_error_rate = round(
+                (int(llm_error_count) + int(llm_timeout_count)) / llm_total * 100, 1
+            )
+
         return {
             "total_logs": int(sys_count) + int(llm_count),
             "total_anomalies": int(total_anomalies),
@@ -48,6 +67,11 @@ def get_stats():
             "alerts_sent": int(alerts_sent),
             "avg_anomaly_score": avg_anomaly_score,
             "mttd_seconds": mttd_seconds,
+            "total_llm_logs": llm_total,
+            "llm_success_count": int(llm_success_count),
+            "llm_error_count": int(llm_error_count),
+            "llm_timeout_count": int(llm_timeout_count),
+            "llm_error_rate": llm_error_rate,
         }
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})

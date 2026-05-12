@@ -6,20 +6,29 @@ const STATUS_COLOR = {
   TIMEOUT: 'text-orange-400',
 }
 
-export default function LLMMetrics({ logs }) {
+function errorRateColor(rate) {
+  if (rate == null) return 'text-white'
+  if (rate > 25) return 'text-red-400'
+  if (rate >= 10) return 'text-yellow-400'
+  return 'text-green-400'
+}
+
+export default function LLMMetrics({ logs, stats }) {
   const llmLogs = useMemo(() => (logs || []).filter(l => l.source_type === 'llm'), [logs])
 
   const metrics = useMemo(() => {
     if (!llmLogs.length) return null
-    const errorCount = llmLogs.filter(l => l.LLM_STATUS !== 'SUCCESS').length
     const totalCost = llmLogs.reduce((s, l) => s + (l.LLM_COST_USD || 0), 0)
     const avgTime = llmLogs.reduce((s, l) => s + (l.LLM_RESPONSE_TIME_MS || 0), 0) / llmLogs.length
+    const errorRate = stats?.llm_error_rate != null
+      ? Number(stats.llm_error_rate).toFixed(1)
+      : ((llmLogs.filter(l => l.LLM_STATUS !== 'SUCCESS').length / llmLogs.length) * 100).toFixed(1)
     return {
-      errorRate: ((errorCount / llmLogs.length) * 100).toFixed(1),
+      errorRate,
       totalCost: totalCost.toFixed(3),
       avgTime: (avgTime / 1000).toFixed(1),
     }
-  }, [llmLogs])
+  }, [llmLogs, stats])
 
   const recent = useMemo(() => llmLogs.slice(-5).reverse(), [llmLogs])
 
@@ -32,7 +41,7 @@ export default function LLMMetrics({ logs }) {
         <>
           <div className="grid grid-cols-3 gap-3 mb-5">
             <div className="rounded-lg p-3 bg-slate-900 text-center">
-              <div className="text-2xl font-bold text-red-400">{metrics.errorRate}%</div>
+              <div className={`text-2xl font-bold ${errorRateColor(parseFloat(metrics.errorRate))}`}>{metrics.errorRate}%</div>
               <div className="text-slate-400 text-xs mt-1">Error Rate</div>
             </div>
             <div className="rounded-lg p-3 bg-slate-900 text-center">
