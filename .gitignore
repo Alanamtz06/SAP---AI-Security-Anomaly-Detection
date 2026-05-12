@@ -4,3 +4,7 @@ __pycache__/
 .env
 .venv/
 mta_archives/
+node_modules/
+*.joblib
+dist/
+*.log
