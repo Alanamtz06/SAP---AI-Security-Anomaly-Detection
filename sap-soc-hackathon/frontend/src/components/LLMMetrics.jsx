@@ -27,24 +27,24 @@ export default function LLMMetrics({ logs }) {
     <div className="rounded-xl p-5 border border-slate-700 h-full" style={{ backgroundColor: '#1e293b' }}>
       <h2 className="text-white font-semibold text-lg mb-4">LLM Metrics</h2>
       {!llmLogs.length ? (
-        <p className="text-slate-400 text-center py-8">Sin datos LLM disponibles</p>
+        <p className="text-slate-400 text-center py-8">No LLM data available</p>
       ) : (
         <>
           <div className="grid grid-cols-3 gap-3 mb-5">
             <div className="rounded-lg p-3 bg-slate-900 text-center">
               <div className="text-2xl font-bold text-red-400">{metrics.errorRate}%</div>
-              <div className="text-slate-400 text-xs mt-1">Tasa de error</div>
+              <div className="text-slate-400 text-xs mt-1">Error Rate</div>
             </div>
             <div className="rounded-lg p-3 bg-slate-900 text-center">
               <div className="text-2xl font-bold text-green-400">${metrics.totalCost}</div>
-              <div className="text-slate-400 text-xs mt-1">Costo total</div>
+              <div className="text-slate-400 text-xs mt-1">Total Cost</div>
             </div>
             <div className="rounded-lg p-3 bg-slate-900 text-center">
               <div className="text-2xl font-bold text-blue-400">{metrics.avgTime}s</div>
-              <div className="text-slate-400 text-xs mt-1">Tiempo promedio</div>
+              <div className="text-slate-400 text-xs mt-1">Avg Response Time</div>
             </div>
           </div>
-          <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-2">Últimos logs LLM</h3>
+          <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-2">Recent LLM Logs</h3>
           <div className="space-y-2">
             {recent.map((log, i) => (
               <div key={i} className="flex items-center justify-between text-xs bg-slate-900 rounded px-3 py-2">

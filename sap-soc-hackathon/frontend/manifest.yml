@@ -1,1 +1,15 @@
-# CF manifest for deploying the built React frontend as a static app
+applications:
+  - name: soc-frontend
+    memory: 256M
+    instances: 1
+    buildpacks:
+      - nodejs_buildpack
+    path: .
+    command: node -e "const handler=require('serve-handler');const http=require('http');http.createServer((req,res)=>handler(req,res,{public:'dist'})).listen(process.env.PORT||8080)"
+    health-check-type: http
+    health-check-http-endpoint: /
+    env:
+      VITE_API_URL: https://api-gateway.cfapps.us10-001.hana.ondemand.com
+    build-parameters:
+      - npm install
+      - npm run build

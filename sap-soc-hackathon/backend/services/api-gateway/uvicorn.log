@@ -1,0 +1,2 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\alana\\OneDrive\\Documentos\\GitHub\\SAP---AI-Security-Anomaly-Detection\\sap-soc-hackathon\\backend\\services\\api-gateway']
+ERROR:    [WinError 10013] Intento de acceso a un socket no permitido por sus permisos de acceso

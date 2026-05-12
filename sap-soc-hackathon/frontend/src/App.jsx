@@ -8,6 +8,8 @@ export default function App() {
   const [incidents, setIncidents] = useState([])
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [lastRefresh, setLastRefresh] = useState(null)
 
   const loadData = async () => {
     try {
@@ -21,8 +23,11 @@ export default function App() {
       setAnomalies(a)
       setIncidents(i)
       setLogs(l)
+      setError(null)
+      setLastRefresh(new Date())
     } catch (err) {
       console.error('Error fetching data:', err)
+      setError('Connection lost — retrying...')
     } finally {
       setLoading(false)
     }
@@ -41,14 +46,29 @@ export default function App() {
           <span className="text-2xl font-bold text-white tracking-wider">SAP SOC</span>
           <span className="text-slate-400 text-lg">AI Security Dashboard</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-          </span>
-          <span className="text-green-400 text-sm font-semibold tracking-widest">LIVE</span>
+        <div className="flex items-center gap-4">
+          {lastRefresh && (
+            <span className="text-slate-500 text-xs">
+              Last updated: {lastRefresh.toLocaleTimeString()}
+            </span>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-3 w-3">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${error ? 'bg-red-400' : 'bg-green-400'} opacity-75`}></span>
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${error ? 'bg-red-500' : 'bg-green-500'}`}></span>
+            </span>
+            <span className={`text-sm font-semibold tracking-widest ${error ? 'text-red-400' : 'text-green-400'}`}>
+              {error ? 'ERROR' : 'LIVE'}
+            </span>
+          </div>
         </div>
       </header>
+      {error && (
+        <div className="bg-red-900 border-b border-red-700 px-6 py-2 text-red-300 text-sm flex items-center gap-2">
+          <span>⚠</span>
+          <span>{error}</span>
+        </div>
+      )}
       <Dashboard
         stats={stats}
         anomalies={anomalies}

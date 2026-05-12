@@ -8,25 +8,25 @@ export default function AnomalyChart({ anomalies }) {
     if (!anomalies?.length) return []
     const counts = {}
     anomalies.forEach(a => {
-      const hour = new Date(a.DETECTED_AT).getHours()
-      const label = `${String(hour).padStart(2, '0')}:00`
+      const d = new Date(a.DETECTED_AT)
+      const label = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:00`
       counts[label] = (counts[label] || 0) + 1
     })
     return Object.entries(counts)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([hora, cantidad]) => ({ hora, cantidad }))
+      .map(([time, count]) => ({ time, count }))
   }, [anomalies])
 
   return (
     <div className="rounded-xl p-5 border border-slate-700 h-full" style={{ backgroundColor: '#1e293b' }}>
-      <h2 className="text-white font-semibold text-lg mb-4">Anomalías Detectadas — Últimas 24h</h2>
+      <h2 className="text-white font-semibold text-lg mb-4">Anomaly Timeline</h2>
       {data.length === 0 ? (
-        <p className="text-slate-400 text-center py-16">Sin anomalías en el periodo</p>
+        <p className="text-slate-400 text-center py-16">No anomalies in this period</p>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="hora" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+            <XAxis dataKey="time" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
             <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} allowDecimals={false} />
             <Tooltip
               contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', color: '#f1f5f9' }}
@@ -34,7 +34,7 @@ export default function AnomalyChart({ anomalies }) {
             />
             <Line
               type="monotone"
-              dataKey="cantidad"
+              dataKey="count"
               stroke="#ef4444"
               strokeWidth={2}
               dot={{ fill: '#ef4444', r: 4 }}
