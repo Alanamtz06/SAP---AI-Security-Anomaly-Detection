@@ -1,3 +1,11 @@
+function formatMTTD(seconds) {
+  if (seconds == null) return '—'
+  if (seconds < 60) return `${seconds}s`
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
+  return `${Math.floor(seconds / 86400)}d ${Math.floor((seconds % 86400) / 3600)}h`
+}
+
 function scoreColor(score) {
   if (score == null) return 'text-white'
   if (score > 0.8) return 'text-red-400'
@@ -23,36 +31,36 @@ export default function KPICards({ stats }) {
       <Card
         icon="📊"
         label="Total Logs"
-        value={stats.total_logs?.toLocaleString('es-MX') ?? '—'}
+        value={stats.total_logs?.toLocaleString('en-US') ?? '—'}
       />
       <Card
         icon="⚠️"
-        label="Anomalías"
+        label="Anomalies"
         value={stats.total_anomalies ?? '—'}
         valueClass={stats.total_anomalies > 0 ? 'text-red-400' : 'text-white'}
       />
       <Card
         icon="🚨"
-        label="Incidentes Abiertos"
+        label="Open Incidents"
         value={stats.open_incidents ?? '—'}
         valueClass={stats.open_incidents > 0 ? 'text-orange-400' : 'text-white'}
       />
       <Card
         icon="📨"
-        label="Alertas Enviadas"
+        label="Alerts Sent"
         value={stats.alerts_sent ?? '—'}
         valueClass="text-green-400"
       />
       <Card
         icon="🎯"
-        label="Score Promedio"
+        label="Avg Score"
         value={stats.avg_anomaly_score != null ? stats.avg_anomaly_score.toFixed(2) : '—'}
         valueClass={scoreColor(stats.avg_anomaly_score)}
       />
       <Card
         icon="⏱️"
         label="MTTD"
-        value={stats.mttd_seconds != null ? `${stats.mttd_seconds}s` : '—'}
+        value={formatMTTD(stats.mttd_seconds)}
       />
     </div>
   )

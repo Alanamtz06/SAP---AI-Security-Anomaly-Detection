@@ -1,11 +1,14 @@
 import os
 import requests
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from connection import execute_insert
 
 BASE_URL = "https://sap-api-b2.679186.xyz"
-API_KEY = os.environ.get("SAP_API_KEY", "ctrl-c-ctrl-v-2026-7a1b6c2d8e5f0g3h9i4j7k2l8m5n")
+API_KEY = os.environ.get("SAP_API_KEY", "")
 HEADERS = {"Authorization": f"Bearer {API_KEY}"}
 
 LLM_TYPES = {"LLM_REQUEST", "LLM_ERROR", "LLM_TIMEOUT"}

@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 const SEVERITY_STYLES = {
   CRITICAL: 'bg-red-900 text-red-300',
   HIGH: 'bg-orange-900 text-orange-300',
@@ -8,35 +10,51 @@ const SEVERITY_STYLES = {
 function WebhookBadge({ status }) {
   if (status === 'SUCCESS') return <span className="text-green-400 font-medium">✓ OK</span>
   if (status === 'FAILED') return <span className="text-red-400 font-medium">✗ FAILED</span>
-  return <span className="text-slate-400">⏳</span>
+  return <span className="text-yellow-400 font-medium">⏳ PENDING</span>
 }
 
 export default function IncidentTable({ incidents }) {
+  const [filter, setFilter] = useState('ALL')
+
   const sorted = [...(incidents || [])]
     .sort((a, b) => {
       if (!a.RESOLVED && b.RESOLVED) return -1
       if (a.RESOLVED && !b.RESOLVED) return 1
       return 0
     })
-    .slice(0, 20)
+    .filter(inc => filter === 'ALL' || inc.SEVERITY === filter)
+    .slice(0, 50)
 
   return (
     <div className="rounded-xl p-5 border border-slate-700" style={{ backgroundColor: '#1e293b' }}>
-      <h2 className="text-white font-semibold text-lg mb-4">Incidentes Recientes</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-white font-semibold text-lg">Recent Incidents</h2>
+        <select
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          className="bg-slate-900 border border-slate-600 text-slate-300 text-sm rounded px-3 py-1"
+        >
+          <option value="ALL">All Severities</option>
+          <option value="CRITICAL">Critical</option>
+          <option value="HIGH">High</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="LOW">Low</option>
+        </select>
+      </div>
       {sorted.length === 0 ? (
-        <p className="text-slate-400 text-center py-8">Sin incidentes activos</p>
+        <p className="text-slate-400 text-center py-8">No active incidents</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-700 text-slate-400 text-left">
                 <th className="pb-3 pr-4 font-medium">ID</th>
-                <th className="pb-3 pr-4 font-medium">Severidad</th>
-                <th className="pb-3 pr-4 font-medium">Tipo de Ataque</th>
+                <th className="pb-3 pr-4 font-medium">Severity</th>
+                <th className="pb-3 pr-4 font-medium">Attack Type</th>
                 <th className="pb-3 pr-4 font-medium">Score</th>
-                <th className="pb-3 pr-4 font-medium">Fuente</th>
+                <th className="pb-3 pr-4 font-medium">Source</th>
                 <th className="pb-3 pr-4 font-medium">Webhook</th>
-                <th className="pb-3 font-medium">Fecha</th>
+                <th className="pb-3 font-medium">Date</th>
               </tr>
             </thead>
             <tbody>
@@ -55,7 +73,7 @@ export default function IncidentTable({ incidents }) {
                     <WebhookBadge status={inc.WEBHOOK_STATUS} />
                   </td>
                   <td className="py-3 text-slate-400 text-xs">
-                    {inc.CREATED_AT ? new Date(inc.CREATED_AT).toLocaleString('es-MX') : '—'}
+                    {inc.CREATED_AT ? new Date(inc.CREATED_AT).toLocaleString('en-US') : '—'}
                   </td>
                 </tr>
               ))}

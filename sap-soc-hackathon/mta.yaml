@@ -15,7 +15,7 @@ modules:
     properties:
       POLL_INTERVAL_SECONDS: 120
     requires:
-      - name: DB_Hack
+      - name: Hack_DB
 
   - name: soc-etl-pipeline
     type: python
@@ -31,7 +31,7 @@ modules:
       POLL_INTERVAL_SECONDS: 120
       ML_ENGINE_URL: ~{ml-engine/url}
     requires:
-      - name: DB_Hack
+      - name: Hack_DB
       - name: ml-engine
         properties:
           ML_ENGINE_URL: ~{url}
@@ -49,7 +49,7 @@ modules:
     properties:
       ALERT_INTERVAL_SECONDS: 60
     requires:
-      - name: DB_Hack
+      - name: Hack_DB
 
   - name: api-gateway
     type: python
@@ -58,8 +58,27 @@ modules:
       memory: 256M
       instances: 1
     requires:
-      - name: DB_Hack
+      - name: Hack_DB
+
+  - name: soc-frontend
+    type: staticfile
+    path: frontend
+    parameters:
+      memory: 256M
+      disk-quota: 512M
+    build-parameters:
+      builder: custom
+      commands:
+        - npm install
+        - npm run build
+      build-result: dist
+    properties:
+      BACKEND_URL: ~{api-gateway/url}
+    requires:
+      - name: api-gateway
+        properties:
+          url: ~{api-gateway/url}
 
 resources:
-  - name: DB_Hack
+  - name: Hack_DB
     type: org.cloudfoundry.existing-service

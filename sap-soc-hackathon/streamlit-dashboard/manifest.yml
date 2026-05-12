@@ -1,0 +1,12 @@
+applications:
+  - name: soc-streamlit
+    memory: 512M
+    instances: 1
+    timeout: 180
+    buildpacks:
+      - python_buildpack
+    command: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    health-check-type: http
+    health-check-http-endpoint: /_stcore/health
+    env:
+      API_GATEWAY_URL: https://api-gateway.cfapps.us10-001.hana.ondemand.com

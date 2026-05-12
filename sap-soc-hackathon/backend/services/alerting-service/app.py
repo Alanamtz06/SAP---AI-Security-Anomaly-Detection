@@ -40,7 +40,7 @@ def get_new_anomalies():
         SELECT 1 FROM INCIDENTS I WHERE I.ANOMALY_ID = AR.ID
     )
     ORDER BY AR.ANOMALY_SCORE DESC
-    LIMIT 1
+    LIMIT 50
     """
     try:
         return execute_query(query)
@@ -172,10 +172,24 @@ def alerting_loop():
 
 
 if __name__ == '__main__':
+    import sys
+    import time
+
+    logger.info("Alerting Service initialized")
     test_connection()
+
+    ALERT_INTERVAL = int(os.environ.get('ALERT_INTERVAL_SECONDS', 60))
+
     if len(sys.argv) > 1 and sys.argv[1] == '--daemon':
-        logger.info("Starting in DAEMON mode")
-        alerting_loop()
+        logger.info(f"Starting in DAEMON mode - alerting every {ALERT_INTERVAL} seconds")
+        while True:
+            try:
+                result = process_alerts()
+                logger.info(f"Cycle complete: {result}")
+            except Exception as e:
+                logger.error(f"Cycle error: {e}")
+            time.sleep(ALERT_INTERVAL)
     else:
+        logger.info("Running in MANUAL mode (single execution)")
         result = process_alerts()
         logger.info(f"Result: {result}")
