@@ -37,6 +37,11 @@ def get_stats():
         """)[0]["MTTD"]
         mttd_seconds = float(mttd_row) if mttd_row is not None else None
 
+        llm_error_count = execute_query(
+            "SELECT COUNT(*) AS CNT FROM SAP_LLM_LOGS WHERE LLM_STATUS != 'SUCCESS'"
+        )[0]["CNT"] or 0
+        llm_error_rate = round(int(llm_error_count) / int(llm_count) * 100, 1) if int(llm_count) > 0 else 0.0
+
         return {
             "total_logs": int(sys_count) + int(llm_count),
             "total_anomalies": int(total_anomalies),
@@ -44,6 +49,7 @@ def get_stats():
             "alerts_sent": int(alerts_sent),
             "avg_anomaly_score": avg_anomaly_score,
             "mttd_seconds": mttd_seconds,
+            "llm_error_rate": llm_error_rate,
         }
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
