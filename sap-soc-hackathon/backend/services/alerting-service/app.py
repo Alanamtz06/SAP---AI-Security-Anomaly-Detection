@@ -30,7 +30,6 @@ def get_severity(anomaly_score: float) -> str:
 
 
 def get_new_anomalies():
-    """Fetch anomalies flagged as IS_ANOMALY=TRUE that have no incident yet."""
     query = """
     SELECT AR.ID, AR.SOURCE_TABLE, AR.SOURCE_ID, AR.ANOMALY_SCORE,
            AR.ANOMALY_TYPE, AR.DETECTED_AT
@@ -40,7 +39,7 @@ def get_new_anomalies():
         SELECT 1 FROM INCIDENTS I WHERE I.ANOMALY_ID = AR.ID
     )
     ORDER BY AR.ANOMALY_SCORE DESC
-    LIMIT 50
+    LIMIT 1
     """
     try:
         return execute_query(query)
@@ -50,7 +49,6 @@ def get_new_anomalies():
 
 
 def create_incident(anomaly_id: int, severity: str, anomaly_type: str = None) -> int:
-    """Create a record in INCIDENTS and return the new incident_id."""
     sql = """
     INSERT INTO INCIDENTS
     (ANOMALY_ID, SEVERITY, ATTACK_TYPE, WEBHOOK_STATUS, ALERT_SENT)
@@ -79,7 +77,6 @@ def create_incident(anomaly_id: int, severity: str, anomaly_type: str = None) ->
 
 
 def update_incident_webhook_status(incident_id: int, status: str):
-    """Update WEBHOOK_STATUS and ALERT_SENT on an incident record."""
     sql = """
     UPDATE INCIDENTS
     SET WEBHOOK_STATUS = ?, ALERT_SENT = ?
@@ -99,7 +96,6 @@ def update_incident_webhook_status(incident_id: int, status: str):
 
 
 def process_alerts():
-    """Process new anomalies: create incidents and dispatch webhooks."""
     logger.info("=" * 60)
     logger.info("Starting alert processing cycle")
     logger.info("=" * 60)
@@ -161,8 +157,7 @@ def process_alerts():
 
 
 def alerting_loop():
-    """Continuous polling loop — checks for new anomalies every ALERT_INTERVAL seconds."""
-    logger.info(f"Alerting Service started in daemon mode — polling every {ALERT_INTERVAL}s")
+    logger.info(f"Alerting Service started — polling every {ALERT_INTERVAL}s")
     while True:
         try:
             process_alerts()
@@ -172,24 +167,10 @@ def alerting_loop():
 
 
 if __name__ == '__main__':
-    import sys
-    import time
-
-    logger.info("Alerting Service initialized")
     test_connection()
-
-    ALERT_INTERVAL = int(os.environ.get('ALERT_INTERVAL_SECONDS', 60))
-
     if len(sys.argv) > 1 and sys.argv[1] == '--daemon':
-        logger.info(f"Starting in DAEMON mode - alerting every {ALERT_INTERVAL} seconds")
-        while True:
-            try:
-                result = process_alerts()
-                logger.info(f"Cycle complete: {result}")
-            except Exception as e:
-                logger.error(f"Cycle error: {e}")
-            time.sleep(ALERT_INTERVAL)
+        logger.info("Starting in DAEMON mode")
+        alerting_loop()
     else:
-        logger.info("Running in MANUAL mode (single execution)")
         result = process_alerts()
         logger.info(f"Result: {result}")

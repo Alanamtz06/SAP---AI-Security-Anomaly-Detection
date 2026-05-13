@@ -3,10 +3,6 @@ import numpy as np
 
 
 def extract_llm_features(df):
-    """
-    Input: df with [TIMESTAMP, LOG_TYPE, LLM_MODEL_ID, LLM_STATUS, LLM_COST_USD, LLM_RESPONSE_TIME_MS]
-    Output: features for Isolation Forest
-    """
     df = df.copy()
 
     df['HOUR'] = pd.to_datetime(df['TIMESTAMP']).dt.hour

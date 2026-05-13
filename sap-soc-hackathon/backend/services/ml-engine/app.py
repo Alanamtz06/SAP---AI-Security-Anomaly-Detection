@@ -26,7 +26,6 @@ def ready():
 
 @app.post('/train')
 def train():
-    """Manually trigger model re-training."""
     if engine._training:
         return JSONResponse(status_code=409, content={"status": "already_training"})
     import threading

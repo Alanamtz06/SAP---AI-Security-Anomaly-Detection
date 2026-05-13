@@ -3,9 +3,9 @@ applications:
     buildpacks:
       - python_buildpack
     path: .
-    memory: 512M
+    memory: 256M
     instances: 1
-    timeout: 180
+    timeout: 300
     command: uvicorn app:app --host 0.0.0.0 --port $PORT
     health-check-type: http
     health-check-http-endpoint: /health
@@ -13,5 +13,3 @@ applications:
       HANA_HOST: bdad283d-c94e-46fb-8167-78fba6c2018a.hna1.prod-us10.hanacloud.ondemand.com
       HANA_PORT: "443"
       HANA_USER: DBADMIN
-      # HANA_PASS: set via -> cf set-env api-gateway HANA_PASS "your-password"
-      # SAP_API_KEY: set via -> cf set-env api-gateway SAP_API_KEY "your-key"

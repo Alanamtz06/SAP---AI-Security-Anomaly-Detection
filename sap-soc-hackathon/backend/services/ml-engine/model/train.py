@@ -31,15 +31,13 @@ def _train_one(features_df: pd.DataFrame, model_name: str, contamination: float)
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     out_path = ARTIFACT_DIR / f'{model_name}.joblib'
     joblib.dump(model, out_path)
-    print(f"✓ Saved {model_name} ({out_path.stat().st_size / 1024 / 1024:.1f} MB)")
+    print(f"Saved {model_name} ({out_path.stat().st_size / 1024 / 1024:.1f} MB)")
     return model
 
 
 def train_models():
-    """Query HANA, extract features, train 4 IsolationForest models, save to artifacts/."""
     print("=== Starting model training ===")
 
-    print("Fetching System PEAK logs...")
     sys_peak = execute_query("""
         SELECT TIMESTAMP, LOG_TYPE, HTTP_STATUS_CODE, CLIENT_IP, SERVICE_ID
         FROM SAP_SYSTEM_LOGS
@@ -48,7 +46,6 @@ def train_models():
         LIMIT 100000
     """)
 
-    print("Fetching System OFFPEAK logs...")
     sys_offpeak = execute_query("""
         SELECT TIMESTAMP, LOG_TYPE, HTTP_STATUS_CODE, CLIENT_IP, SERVICE_ID
         FROM SAP_SYSTEM_LOGS
@@ -57,7 +54,6 @@ def train_models():
         LIMIT 100000
     """)
 
-    print("Fetching LLM PEAK logs...")
     llm_peak = execute_query("""
         SELECT TIMESTAMP, LOG_TYPE, LLM_MODEL_ID, LLM_STATUS, LLM_COST_USD, LLM_RESPONSE_TIME_MS
         FROM SAP_LLM_LOGS
@@ -66,7 +62,6 @@ def train_models():
         LIMIT 100000
     """)
 
-    print("Fetching LLM OFFPEAK logs...")
     llm_offpeak = execute_query("""
         SELECT TIMESTAMP, LOG_TYPE, LLM_MODEL_ID, LLM_STATUS, LLM_COST_USD, LLM_RESPONSE_TIME_MS
         FROM SAP_LLM_LOGS

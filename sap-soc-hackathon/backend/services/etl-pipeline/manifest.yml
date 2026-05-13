@@ -3,16 +3,14 @@ applications:
     buildpacks:
       - python_buildpack
     path: .
-    memory: 512M
+    memory: 256M
     instances: 1
     timeout: 600
     command: python app.py --daemon
     no-route: true
     health-check-type: process
     env:
-      POLL_INTERVAL_SECONDS: "1800"
-      ML_ENGINE_URL: https://ml-engine.cfapps.us10.hana.ondemand.com
+      POLL_INTERVAL_SECONDS: "300"
       HANA_HOST: bdad283d-c94e-46fb-8167-78fba6c2018a.hna1.prod-us10.hanacloud.ondemand.com
       HANA_PORT: "443"
       HANA_USER: DBADMIN
-      # HANA_PASS: set via -> cf set-env soc-etl-pipeline HANA_PASS "your-password"

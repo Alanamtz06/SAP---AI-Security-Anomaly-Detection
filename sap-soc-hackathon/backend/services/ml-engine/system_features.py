@@ -1,12 +1,7 @@
 import pandas as pd
-from datetime import datetime
 
 
 def extract_system_features(df):
-    """
-    Input: df with columns [TIMESTAMP, LOG_TYPE, HTTP_STATUS_CODE, CLIENT_IP, SERVICE_ID]
-    Output: enriched df with features for Isolation Forest
-    """
     df = df.copy()
 
     df['HOUR'] = pd.to_datetime(df['TIMESTAMP']).dt.hour

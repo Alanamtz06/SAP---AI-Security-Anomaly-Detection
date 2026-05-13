@@ -39,7 +39,7 @@ class ScoringEngine:
             from model.train import train_models
             train_models()
             self._load_models()
-            print("✓ Background training complete — models ready")
+            print("Background training complete — models ready")
         except Exception as e:
             print(f"Training failed: {e}")
         finally:
@@ -50,9 +50,9 @@ class ScoringEngine:
             path = self.artifact_dir / f'{name}.joblib'
             if path.exists():
                 self.models[name] = joblib.load(path)
-                print(f"✓ Loaded {name}")
+                print(f"Loaded {name}")
             else:
-                print(f"⚠ {name} not found at {path}")
+                print(f"Warning: {name} not found at {path}")
         if len(self.models) == len(MODEL_NAMES):
             self._ready = True
 
@@ -88,10 +88,8 @@ class ScoringEngine:
             raise ValueError(f"Model {model_name} not loaded")
 
         model = self.models[model_name]
-
         scores_raw = model.score_samples(features)
         predictions = model.predict(features)
-
         scores_norm = 1 / (1 + np.exp(-scores_raw))
 
         result_df = df[['ID', 'TIMESTAMP']].copy()
