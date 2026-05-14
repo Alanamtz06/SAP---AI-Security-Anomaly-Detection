@@ -16,13 +16,13 @@ def extract_system_features(df):
     df['HTTP_STATUS_NORM'] = df['HTTP_STATUS_NORM'].clip(0, 1)
 
     df['CLIENT_IP_ENCODED'] = pd.factorize(df['CLIENT_IP'])[0]
-    df['CLIENT_IP_ENCODED'] = df['CLIENT_IP_ENCODED'] / df['CLIENT_IP_ENCODED'].max()
+    df['CLIENT_IP_ENCODED'] = (df['CLIENT_IP_ENCODED'] / df['CLIENT_IP_ENCODED'].max()).fillna(0)
 
     df['SERVICE_ID_ENCODED'] = pd.factorize(df['SERVICE_ID'])[0]
-    df['SERVICE_ID_ENCODED'] = df['SERVICE_ID_ENCODED'] / df['SERVICE_ID_ENCODED'].max()
+    df['SERVICE_ID_ENCODED'] = (df['SERVICE_ID_ENCODED'] / df['SERVICE_ID_ENCODED'].max()).fillna(0)
 
     df['IP_REQ_COUNT_5M'] = df.groupby('CLIENT_IP').cumcount() + 1
-    df['IP_REQ_COUNT_5M'] = df['IP_REQ_COUNT_5M'] / df['IP_REQ_COUNT_5M'].max()
+    df['IP_REQ_COUNT_5M'] = (df['IP_REQ_COUNT_5M'] / df['IP_REQ_COUNT_5M'].max()).fillna(0)
 
     df['IP_ERROR_RATIO'] = (df['HTTP_STATUS_CODE'] >= 400).astype(int)
 

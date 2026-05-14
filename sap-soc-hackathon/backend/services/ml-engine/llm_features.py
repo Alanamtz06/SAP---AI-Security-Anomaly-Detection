@@ -12,7 +12,7 @@ def extract_llm_features(df):
     log_type_map = {'LLM_REQUEST': 0, 'LLM_ERROR': 1, 'LLM_TIMEOUT': 2}
     df['LOG_TYPE_ENCODED'] = df['LOG_TYPE'].map(log_type_map).fillna(0)
 
-    status_map = {'SUCCESS': 0, 'ERROR': 1, 'TIMEOUT': 2}
+    status_map = {'SUCCESS': 0, 'success': 0, 'ERROR': 1, 'error': 1, 'TIMEOUT': 2, 'timeout': 2}
     df['LLM_STATUS_ENCODED'] = df['LLM_STATUS'].map(status_map).fillna(0)
 
     df['LLM_COST_LOG'] = np.log1p(df['LLM_COST_USD'].fillna(0))
@@ -24,10 +24,10 @@ def extract_llm_features(df):
     df['LLM_RESPONSE_TIME_NORM'] = df['LLM_RESPONSE_TIME_NORM'].clip(0, 1)
 
     df['LLM_MODEL_ENCODED'] = pd.factorize(df['LLM_MODEL_ID'])[0]
-    df['LLM_MODEL_ENCODED'] = df['LLM_MODEL_ENCODED'] / df['LLM_MODEL_ENCODED'].max()
+    df['LLM_MODEL_ENCODED'] = (df['LLM_MODEL_ENCODED'] / df['LLM_MODEL_ENCODED'].max()).fillna(0)
 
     df['MODEL_REQ_COUNT'] = df.groupby('LLM_MODEL_ID').cumcount() + 1
-    df['MODEL_REQ_COUNT'] = df['MODEL_REQ_COUNT'] / df['MODEL_REQ_COUNT'].max()
+    df['MODEL_REQ_COUNT'] = (df['MODEL_REQ_COUNT'] / df['MODEL_REQ_COUNT'].max()).fillna(0)
 
     df['MODEL_ERROR_RATE'] = (df['LLM_STATUS_ENCODED'] > 0).astype(int)
 

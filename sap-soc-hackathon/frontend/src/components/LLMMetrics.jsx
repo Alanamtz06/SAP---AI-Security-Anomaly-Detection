@@ -2,8 +2,11 @@ import { useMemo } from 'react'
 
 const STATUS_COLOR = {
   SUCCESS: 'text-green-400',
+  success: 'text-green-400',
   ERROR: 'text-red-400',
+  error: 'text-red-400',
   TIMEOUT: 'text-orange-400',
+  timeout: 'text-orange-400',
 }
 
 function errorRateColor(rate) {
@@ -22,7 +25,7 @@ export default function LLMMetrics({ logs, stats }) {
     const avgTime = llmLogs.reduce((s, l) => s + (l.LLM_RESPONSE_TIME_MS || 0), 0) / llmLogs.length
     const errorRate = stats?.llm_error_rate != null
       ? Number(stats.llm_error_rate).toFixed(1)
-      : ((llmLogs.filter(l => l.LLM_STATUS !== 'SUCCESS').length / llmLogs.length) * 100).toFixed(1)
+      : ((llmLogs.filter(l => (l.LLM_STATUS || '').toUpperCase() !== 'SUCCESS').length / llmLogs.length) * 100).toFixed(1)
     return {
       errorRate,
       totalCost: totalCost.toFixed(3),

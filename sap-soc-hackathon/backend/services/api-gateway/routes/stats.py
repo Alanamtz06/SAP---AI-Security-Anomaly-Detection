@@ -38,7 +38,7 @@ def get_stats():
         mttd_seconds = float(mttd_row) if mttd_row is not None else None
 
         llm_error_count = execute_query(
-            "SELECT COUNT(*) AS CNT FROM SAP_LLM_LOGS WHERE LLM_STATUS != 'SUCCESS'"
+            "SELECT COUNT(*) AS CNT FROM SAP_LLM_LOGS WHERE UPPER(LLM_STATUS) != 'SUCCESS'"
         )[0]["CNT"] or 0
         llm_error_rate = round(int(llm_error_count) / int(llm_count) * 100, 1) if int(llm_count) > 0 else 0.0
 
